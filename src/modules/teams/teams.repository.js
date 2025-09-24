@@ -1,6 +1,5 @@
 import { pool } from '../../config/database.js';
 
-// Lista todos os membros de um time específico com detalhes do usuário
 export async function findMembersByTeamId(teamId) {
   const { rows } = await pool.query(
     `SELECT u.id, u.nome, u.email, ut.papel
@@ -12,7 +11,6 @@ export async function findMembersByTeamId(teamId) {
   return rows;
 }
 
-// Adiciona um usuário a um time
 export async function addUserToTeam({ teamId, userId, papel }) {
   const { rows } = await pool.query(
     'INSERT INTO usuario_team (team_id, usuario_id, papel) VALUES ($1, $2, $3) RETURNING *',
@@ -21,7 +19,6 @@ export async function addUserToTeam({ teamId, userId, papel }) {
   return rows[0];
 }
 
-// Remove um usuário de um time
 export async function removeUserFromTeam({ teamId, userId }) {
   const { rowCount } = await pool.query(
     'DELETE FROM usuario_team WHERE team_id = $1 AND usuario_id = $2',

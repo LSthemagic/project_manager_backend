@@ -11,10 +11,8 @@ async function ensureAdminOrManager(request, reply) {
 }
 
 export async function teamRoutes(app) {
-  // Ver lista de membros (qualquer um logado pode ver)
   app.get('/:teamId/members', controller.listTeamMembers);
 
-  // Ações de gerenciamento (apenas admin/gerente)
   app.post('/:teamId/members', { preHandler: [ensureAdminOrManager] }, controller.addTeamMember);
   app.delete('/:teamId/members/:userId', { preHandler: [ensureAdminOrManager] }, controller.removeTeamMember);
 }

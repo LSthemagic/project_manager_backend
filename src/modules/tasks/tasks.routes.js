@@ -13,14 +13,11 @@ export async function taskRoutes(app) {
  app.get('/projects/:projectId/tasks', { preHandler: [checkProjectAccess] }, controller.listTasksForProject);
   app.post('/projects/:projectId/tasks', { preHandler: [checkProjectAccess] }, controller.createTaskInProject);
 
-  // --- ROTAS PARA UMA TAREFA INDIVIDUAL ---
-  // A URL final será /api/tasks/:taskId
   app.get('/tasks/:taskId', { preHandler: [checkProjectAccess] }, controller.getTask);
   app.put('/tasks/:taskId', { preHandler: [checkProjectAccess] }, controller.updateTask);
   app.delete('/tasks/:taskId', { preHandler: [checkProjectAccess] }, controller.deleteTask);
 
 
-  // --- ROTAS RELACIONADAS A ANEXOS (ATTACHMENTS) ---
   app.post('/:taskId/attachments', { preHandler: [checkProjectAccess] }, async (request, reply) => {
     const { taskId } = request.params;
     const userId = request.session.user.id;

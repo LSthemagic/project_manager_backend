@@ -2,13 +2,10 @@ import { sendContactEmail } from '../../lib/mailer.js';
 
 export async function contactRoutes(app) {
   
-  // ROTA PÚBLICA PARA O FORMULÁRIO DE CONTATO
-  // POST /api/contact
   app.post('/', async (request, reply) => {
     try {
       const { nome, email, mensagem } = request.body;
 
-      // Validação simples
       if (!nome || !email || !mensagem) {
         return reply.status(400).send({ message: 'Todos os campos são obrigatórios.' });
       }

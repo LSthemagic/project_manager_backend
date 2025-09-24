@@ -14,7 +14,7 @@ export async function createTimeLog(request, reply) {
   const newTimeLog = await repository.create({
     horas,
     descricao,
-    data_registro: data_registro || new Date(), // Usa a data enviada ou a data atual
+    data_registro: data_registro || new Date(),
     tarefa_id: taskId,
     usuario_id
   });

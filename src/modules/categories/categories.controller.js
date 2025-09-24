@@ -34,5 +34,5 @@ export async function deleteCategory(request, reply) {
   if (!success) {
     return reply.status(404).send({ message: 'Categoria não encontrada.' });
   }
-  reply.status(204).send(); // 204 No Content
+  reply.status(204).send();
 }

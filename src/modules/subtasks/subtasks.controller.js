@@ -22,7 +22,6 @@ export async function updateSubtask(request, reply) {
     return reply.status(404).send({ message: 'Sub-tarefa não encontrada.' });
   }
 
-  // Atualiza apenas os campos fornecidos, mantendo os existentes se não forem passados
   const updatedData = {
     titulo: titulo !== undefined ? titulo : subtask.titulo,
     concluida: concluida !== undefined ? concluida : subtask.concluida,

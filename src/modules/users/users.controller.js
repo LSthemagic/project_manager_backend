@@ -18,7 +18,6 @@ export async function getUser(request, reply) {
 export async function createUser(request, reply) {
   const { nome, email, senha, tipo_usuario } = request.body;
 
-  // Criptografa a senha antes de criar
   const hashedPassword = await bcrypt.hash(senha, 10);
 
   const newUser = await repository.create({

@@ -1,6 +1,5 @@
 import * as controller from './reports.controller.js';
 
-// Middleware para garantir que o usuário é admin ou gerente
 async function ensureAdminOrManager(request, reply) {
   if (!request.session.user) {
     return reply.status(401).send({ message: 'Acesso negado. Por favor, faça login.' });
@@ -12,7 +11,6 @@ async function ensureAdminOrManager(request, reply) {
 }
 
 export async function reportRoutes(app) {
-  // Aplica o middleware de segurança a todas as rotas deste módulo
   app.addHook('preHandler', ensureAdminOrManager);
 
   app.get('/dashboard', controller.showDashboard);

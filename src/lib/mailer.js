@@ -1,11 +1,10 @@
 import nodemailer from 'nodemailer';
 import 'dotenv/config';
 
-// Configura o "transportador" de email usando as credenciais do .env
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: process.env.SMTP_PORT,
-  secure: true, // Use 'true' para a porta 465, pois é uma conexão SSL
+  secure: true,
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
@@ -13,14 +12,13 @@ const transporter = nodemailer.createTransport({
 });
 
 
-// Função que vamos usar para enviar o email do formulário de contato
 export async function sendContactEmail({ nome, email, mensagem }) {
   const mailOptions = {
-    from: `"${nome}" <${email}>`, // Remetente
-    to: '075railan@gmail.com', // Destinatário
+    from: `"${nome}" <${email}>`,
+    to: '075railan@gmail.com',
     subject: `Nova mensagem de contato de ${nome}`,
-    text: mensagem, // Corpo do email em texto puro
-    html: `<p><b>De:</b> ${nome} (${email})</p><p><b>Mensagem:</b></p><p>${mensagem}</p>`, // Corpo em HTML
+    text: mensagem,
+    html: `<p><b>De:</b> ${nome} (${email})</p><p><b>Mensagem:</b></p><p>${mensagem}</p>`,
   };
 
   try {

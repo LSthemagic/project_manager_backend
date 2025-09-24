@@ -6,32 +6,27 @@ describe('Projects API', () => {
   let adminCookie;
   let commonUserCookie;
 
-  // Antes de todos os testes, inicializa o app e faz login para obter os cookies de sessão
   beforeAll(async () => {
     app = await buildApp();
     await app.ready();
 
-    // Login como Admin
     const adminLoginResponse = await supertest(app.server).post('/api/auth/login').send({
       email: 'novo.silva@email.com',
-      senha: 'nova_senha_mais_forte_ainda' // <-- COLOQUE A SENHA CORRETA
+      senha: 'nova_senha_mais_forte_ainda'
     });
     adminCookie = adminLoginResponse.headers['set-cookie'];
 
-    // Login como Usuário Comum
     const commonUserLoginResponse = await supertest(app.server).post('/api/auth/login').send({
-      email: 'pedro@email.com', // Supondo que Pedro é 'comum'
-      senha: 'nova_senha_mais_forte_ainda' // <-- COLOQUE A SENHA CORRETA
+      email: 'pedro@email.com',
+      senha: 'nova_senha_mais_forte_ainda'
     });
     commonUserCookie = commonUserLoginResponse.headers['set-cookie'];
   });
 
-  // Fecha o servidor após os testes
   afterAll(async () => {
     await app.close();
   });
 
-  // Testes de criação de projeto
   describe('POST /api/projects', () => {
     it('should return 403 for common user', async () => {
       const response = await supertest(app.server)
@@ -54,7 +49,6 @@ describe('Projects API', () => {
     });
   });
 
-  // Testes de listagem de projetos
   describe('GET /api/projects', () => {
       it('should return a list of projects for an admin', async () => {
           const response = await supertest(app.server)

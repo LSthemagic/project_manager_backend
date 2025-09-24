@@ -58,7 +58,6 @@ export async function finishProject(request, reply) {
       reply.send({ message: 'Projeto finalizado com sucesso!' });
     }
   } catch (error) {
-    // Captura o erro lançado pela função do PostgreSQL (ex: tarefas pendentes)
     request.log.error(error);
     reply.status(400).send({ message: error.message });
   }

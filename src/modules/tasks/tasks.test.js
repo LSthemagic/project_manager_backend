@@ -7,13 +7,11 @@ describe('Tasks API', () => {
   let agent;
   let newTaskId;
 
-  // IDs do seu banco de dados para os testes
   const PROJECT_ID_USER_HAS_ACCESS = 1;
   const PROJECT_ID_USER_HAS_NO_ACCESS = 2;
-  const USER_ID_WITH_ACCESS = 3; // ID de Pedro
-  const STATUS_ID_INITIAL = 1; // ID de 'A Fazer'
+  const USER_ID_WITH_ACCESS = 3;
+  const STATUS_ID_INITIAL = 1;
 
-  // --- SETUP E TEARDOWN ---
   beforeAll(async () => {
     app = await buildApp();
     await app.ready();
@@ -21,7 +19,7 @@ describe('Tasks API', () => {
 
     await agent.post('/api/auth/login').send({
       email: 'pedro@email.com',
-      senha: 'nova_senha_mais_forte_ainda', // <-- PREENCHA A SENHA CORRETA
+      senha: 'nova_senha_mais_forte_ainda',
     });
   });
 
@@ -34,7 +32,6 @@ describe('Tasks API', () => {
   });
 
 
-  // --- TESTES AGRUPADOS POR FUNCIONALIDADE ---
   describe('Project Tasks (/api/projects/:projectId/tasks)', () => {
 
     it('should NOT create a task for a project the user has no access to and return 403', async () => {
