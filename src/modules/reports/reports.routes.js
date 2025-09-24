@@ -11,6 +11,9 @@ async function ensureAdminOrManager(request, reply) {
 }
 
 export async function reportRoutes(app) {
+  // Rota pública para estatísticas do homepage
+  app.get('/public-stats', controller.showPublicStats);
+
   app.addHook('preHandler', ensureAdminOrManager);
 
   app.get('/dashboard', controller.showDashboard);

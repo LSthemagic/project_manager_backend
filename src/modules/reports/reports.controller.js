@@ -14,3 +14,8 @@ export async function showProductivityReport(request, reply) {
   const data = await repository.getProductivityReport();
   reply.send(data);
 }
+
+export async function showPublicStats(request, reply) {
+  const data = await repository.getPublicStats();
+  reply.send(data);
+}

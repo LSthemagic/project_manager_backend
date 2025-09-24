@@ -2,6 +2,7 @@ import fastify from 'fastify';
 import { pool } from './config/database.js';
 import fastifyCookie from '@fastify/cookie';
 import fastifySession from '@fastify/session';
+import fastifyCors from '@fastify/cors';
 import { authRoutes } from './modules/auth/auth.routes.js';
 import { categoryRoutes } from './modules/categories/categories.routes.js';
 import { userRoutes } from './modules/users/users.routes.js';
@@ -24,24 +25,58 @@ async function buildApp() {
     logger: true,
   });
 
+  // Configurar CORS
+  await app.register(fastifyCors, {
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'http://localhost:3001', 
+        'https://project-manager-backend-5wv2.onrender.com'
+      ];
+
+      // Permitir requisições sem origin (como Postman, aplicações mobile, etc.)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Não permitido pelo CORS'), false);
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'PATCH']
+  });
+
   app.register(fastifyCookie);
   app.register(fastifySession, {
-    secret: process.env.SESSION_SECRET,
+    secret: process.env.SESSION_SECRET || 'default-secret-key',
     cookie: {
       secure: false,
       maxAge: 1000 * 60 * 60 * 24 * 7,
+      httpOnly: true,
+      sameSite: 'lax'
     },
     saveUninitialized: false,
   });
 
   app.decorate('db', pool);
 
+  // Middleware global para adicionar headers CORS e log
+  app.addHook('onRequest', async (request, reply) => {
+    // Log da requisição
+    app.log.info(`${request.method} ${request.url} - User-Agent: ${request.headers['user-agent']}`);
+  });
+
+  // Registrar multipart antes das rotas
+  app.register(fastifyMultipart);
+
+  // Health check routes
   app.get('/health', async () => ({ status: 'ok' }));
   app.get('/db-test', async (request, reply) => {
     const result = await app.db.query('SELECT NOW()');
     reply.send({ success: true, timestamp: result.rows[0].now });
   });
-  app.register(fastifyMultipart);
   app.register(authRoutes, { prefix: '/api/auth' });
   app.register(categoryRoutes, { prefix: '/api/categories' });
   app.register(userRoutes, { prefix: '/api/users' });

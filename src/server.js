@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { buildApp } from './app.js';
 import { testDatabaseConnection } from './config/database.js';
 
