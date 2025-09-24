@@ -7,6 +7,8 @@ import { categoryRoutes } from './modules/categories/categories.routes.js';
 import { userRoutes } from './modules/users/users.routes.js';
 import { teamRoutes } from './modules/teams/teams.routes.js';
 import { projectRoutes } from './modules/projects/projects.routes.js';
+import fastifyMultipart from '@fastify/multipart';
+import { taskRoutes } from './modules/tasks/tasks.routes.js';
 
 async function buildApp() {
   const app = fastify({
@@ -30,12 +32,13 @@ async function buildApp() {
     const result = await app.db.query('SELECT NOW()');
     reply.send({ success: true, timestamp: result.rows[0].now });
   });
-
+  app.register(fastifyMultipart);
   app.register(authRoutes, { prefix: '/api/auth' });
   app.register(categoryRoutes, { prefix: '/api/categories' });
   app.register(userRoutes, { prefix: '/api/users' });
   app.register(teamRoutes, { prefix: '/api/teams' });
   app.register(projectRoutes, { prefix: '/api/projects' });
+  app.register(taskRoutes, { prefix: '/api/tasks' });
 
   return app;
 }
