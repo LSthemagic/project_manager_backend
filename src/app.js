@@ -2,7 +2,7 @@ import fastify from 'fastify';
 import { pool } from './config/database.js';
 import fastifyCookie from '@fastify/cookie';
 import fastifySession from '@fastify/session';
-import { authRoutes } from './modules/auth/auth.routes.js'; 
+import { authRoutes } from './modules/auth/auth.routes.js';
 import { categoryRoutes } from './modules/categories/categories.routes.js';
 import { userRoutes } from './modules/users/users.routes.js';
 import { teamRoutes } from './modules/teams/teams.routes.js';
@@ -10,6 +10,7 @@ import { projectRoutes } from './modules/projects/projects.routes.js';
 import fastifyMultipart from '@fastify/multipart';
 import { taskRoutes } from './modules/tasks/tasks.routes.js';
 import { contactRoutes } from './modules/contact/contact.routes.js';
+import { reportRoutes } from './modules/reports/reports.routes.js';
 
 async function buildApp() {
   const app = fastify({
@@ -41,6 +42,7 @@ async function buildApp() {
   app.register(projectRoutes, { prefix: '/api/projects' });
   app.register(taskRoutes, { prefix: '/api' });
   app.register(contactRoutes, { prefix: '/api/contact' });
+  app.register(reportRoutes, { prefix: '/api/reports' });
 
   return app;
 }
