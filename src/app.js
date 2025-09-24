@@ -16,6 +16,7 @@ import { auditRoutes } from './modules/admin/audit/audit.routes.js';
 import { taskStatusRoutes } from './modules/admin/task-statuses/task-statuses.routes.js';
 import { tagRoutes } from './modules/admin/tags/tags.routes.js';
 import { commentRoutes } from './modules/comments/comments.routes.js';
+import { subtaskRoutes } from './modules/subtasks/subtasks.routes.js';
 
 async function buildApp() {
   const app = fastify({
@@ -53,7 +54,9 @@ async function buildApp() {
   app.register(taskStatusRoutes, { prefix: '/api/admin/task-statuses' }); 
   app.register(tagRoutes, { prefix: '/api/admin/tags' }); 
   app.register(commentRoutes, { prefix: '/api' });
+  app.register(subtaskRoutes, { prefix: '/api' });
 
+  
   return app;
 }
 

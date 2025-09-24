@@ -1,11 +1,8 @@
 import * as controller from './comments.controller.js';
 import * as projectRepository from '../projects/projects.repository.js';
 import { pool } from '../../config/database.js';
+import { checkProjectAccess } from '../../middleware/auth.middleware.js';
 
-// Reutilizamos o middleware de segurança de tarefas
-async function checkProjectAccess(request, reply) {
-    // ... (cole aqui o middleware checkProjectAccess do arquivo tasks.routes.js)
-}
 
 export async function commentRoutes(app) {
   // Rotas para listar e criar comentários DENTRO de uma tarefa

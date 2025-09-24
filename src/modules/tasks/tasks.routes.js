@@ -3,51 +3,8 @@ import { promisify } from 'node:util';
 import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
-
 import * as controller from './tasks.controller.js';
-import * as projectRepository from '../projects/projects.repository.js';
-import { pool } from '../../config/database.js'; // Import pool for direct use in middleware
-
-// --- MIDDLEWARE DE SEGURANÇA ---
-async function checkProjectAccess(request, reply) {
-  console.log('\n--- 🛡️  Iniciando Middleware checkProjectAccess 🛡️ ---');
-  const user = request.session.user;
-
-  if (!user) {
-    console.log('❌ [Middleware] Usuário não autenticado na sessão.');
-    return reply.status(401).send({ message: 'Acesso negado. Por favor, faça login.' });
-  }
-  console.log(`[Middleware] 👤 Usuário autenticado: ID ${user.id}, Tipo: ${user.tipo_usuario}`);
-  console.log('[Middleware] URL Params recebidos:', request.params);
-
-  let projectId = request.params.projectId;
-  if (!projectId) {
-    const { taskId } = request.params;
-    if (!taskId || taskId === 'undefined') { // Verificação extra
-      console.log('❌ [Middleware] ID da tarefa inválido ou indefinido.');
-      return reply.status(400).send({ message: 'ID da tarefa inválido.' });
-    }
-    const taskResult = await pool.query('SELECT projeto_id FROM tarefa WHERE id = $1', [taskId]);
-    if (taskResult.rows.length === 0) {
-      console.log(`❌ [Middleware] Tarefa com ID ${taskId} não encontrada.`);
-      return reply.status(404).send({ message: 'Tarefa não encontrada.' });
-    }
-    projectId = taskResult.rows[0].projeto_id;
-  }
-  
-  console.log(`[Middleware] ➡️  Chamando repositório para verificar acesso ao projeto ID: ${projectId}`);
-  const project = await projectRepository.findById(projectId, user);
-
-  if (!project) {
-    console.log('🚫 [Middleware] ACESSO BLOQUEADO. projectRepository.findById retornou null.');
-    console.log('--- Fim do Middleware ---');
-    return reply.status(403).send({ message: 'Você não tem permissão para acessar este projeto.' });
-  }
-
-  console.log('✅ [Middleware] Acesso PERMITIDO ao projeto:', project.nome);
-  console.log('--- Fim do Middleware ---');
-  request.project = project; 
-}
+import { checkProjectAccess } from '../../middleware/auth.middleware.js';
 
 const pump = promisify(pipeline);
 
