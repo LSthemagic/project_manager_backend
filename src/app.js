@@ -4,6 +4,7 @@ import fastifyCookie from '@fastify/cookie';
 import fastifySession from '@fastify/session';
 import { authRoutes } from './modules/auth/auth.routes.js'; 
 import { categoryRoutes } from './modules/categories/categories.routes.js';
+import { userRoutes } from './modules/users/users.routes.js';
 
 async function buildApp() {
   const app = fastify({
@@ -30,6 +31,7 @@ async function buildApp() {
 
   app.register(authRoutes, { prefix: '/api/auth' });
   app.register(categoryRoutes, { prefix: '/api/categories' });
+  app.register(userRoutes, { prefix: '/api/users' }); 
 
   return app;
 }
