@@ -9,6 +9,7 @@ import { teamRoutes } from './modules/teams/teams.routes.js';
 import { projectRoutes } from './modules/projects/projects.routes.js';
 import fastifyMultipart from '@fastify/multipart';
 import { taskRoutes } from './modules/tasks/tasks.routes.js';
+import { contactRoutes } from './modules/contact/contact.routes.js';
 
 async function buildApp() {
   const app = fastify({
@@ -39,6 +40,7 @@ async function buildApp() {
   app.register(teamRoutes, { prefix: '/api/teams' });
   app.register(projectRoutes, { prefix: '/api/projects' });
   app.register(taskRoutes, { prefix: '/api/tasks' });
+  app.register(contactRoutes, { prefix: '/api/contact' });
 
   return app;
 }
