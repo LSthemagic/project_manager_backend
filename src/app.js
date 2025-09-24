@@ -3,6 +3,7 @@ import { pool } from './config/database.js';
 import fastifyCookie from '@fastify/cookie';
 import fastifySession from '@fastify/session';
 import { authRoutes } from './modules/auth/auth.routes.js'; 
+import { categoryRoutes } from './modules/categories/categories.routes.js';
 
 async function buildApp() {
   const app = fastify({
@@ -28,6 +29,7 @@ async function buildApp() {
   });
 
   app.register(authRoutes, { prefix: '/api/auth' });
+  app.register(categoryRoutes, { prefix: '/api/categories' });
 
   return app;
 }
