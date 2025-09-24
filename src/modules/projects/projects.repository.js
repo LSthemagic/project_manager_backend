@@ -29,10 +29,10 @@ export async function create({ nome, descricao, categoria_id, usuario_id }) {
   return rows[0];
 }
 
-export async function update(id, { nome, descricao, categoria_id, status }) {
+export async function update(id, { nome, descricao, categoria_id, status, configuracoes }) {
     const { rows } = await pool.query(
-        'UPDATE projeto SET nome = $1, descricao = $2, categoria_id = $3, status = $4, data_atualizacao = NOW() WHERE id = $5 RETURNING *',
-        [nome, descricao, categoria_id, status, id]
+        'UPDATE projeto SET nome = $1, descricao = $2, categoria_id = $3, status = $4, configuracoes = $5, data_atualizacao = NOW() WHERE id = $6 RETURNING *',
+        [nome, descricao, categoria_id, status, configuracoes, id]
     );
     return rows[0];
 }

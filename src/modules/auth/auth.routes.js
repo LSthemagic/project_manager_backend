@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import { updatePreferences } from '../users/users.repository.js';
 
 // Helper: Middleware para verificar se o usuário está autenticado
 // Vamos usar isso para proteger as rotas de update
@@ -60,6 +61,18 @@ export async function authRoutes(app) {
     };
 
     return reply.send({ message: 'Login bem-sucedido!', user: request.session.user });
+  });
+
+  app.put('/me/preferences', { preHandler: [ensureAuthenticated] }, async (request, reply) => {
+    const userId = request.session.user.id;
+    const preferences = request.body; // O corpo da requisição será o objeto JSON
+
+    const updatedUser = await updatePreferences(userId, preferences);
+
+    // Atualiza a sessão com as novas preferências também
+    request.session.user.preferencias = updatedUser.preferencias;
+
+    reply.send({ message: 'Preferências atualizadas com sucesso!', preferences: updatedUser.preferencias });
   });
 
   // --- ROTAS PARA O USUÁRIO LOGADO (/me) ---

@@ -40,3 +40,10 @@ export async function remove(id) {
   const { rowCount } = await pool.query('DELETE FROM usuario WHERE id = $1', [id]);
   return rowCount > 0;
 }
+export async function updatePreferences(userId, preferences) {
+  const { rows } = await pool.query(
+    'UPDATE usuario SET preferencias = $1, data_atualizacao = NOW() WHERE id = $2 RETURNING *',
+    [preferences, userId]
+  );
+  return rows[0];
+}
