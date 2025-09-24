@@ -29,7 +29,6 @@ describe('Projects API', () => {
   // Fecha o servidor após os testes
   afterAll(async () => {
     await app.close();
-    await pool.end();
   });
 
   // Testes de criação de projeto

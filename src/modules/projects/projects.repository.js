@@ -16,9 +16,41 @@ export async function findAll(user) {
   return rows;
 }
 
-export async function findById(id) {
-    const { rows } = await pool.query('SELECT * FROM projeto WHERE id = $1', [id]);
-    return rows[0];
+export async function findById(id, user) {
+  console.log(`\n[Repo: Project] 🔎 Buscando projeto ID: ${id} para usuário ID: ${user.id}`);
+  
+  const { rows } = await pool.query('SELECT * FROM projeto WHERE id = $1', [id]);
+  const project = rows[0];
+
+  if (!project) {
+    console.log(`[Repo: Project] ❌ Projeto ID: ${id} não encontrado no banco.`);
+    return null;
+  }
+  console.log(`[Repo: Project] ✅ Projeto ID: ${id} encontrado. Dono do projeto é usuário ID: ${project.usuario_id}`);
+
+  if (user.tipo_usuario === 'admin' || user.tipo_usuario === 'gerente') {
+    console.log(`[Repo: Project] 👤 Usuário é admin/gerente. Acesso concedido.`);
+    return project;
+  }
+
+  if (project.usuario_id === user.id) {
+    console.log(`[Repo: Project] 👤 Usuário é o dono do projeto. Acesso concedido.`);
+    return project;
+  }
+  
+  console.log(`[Repo: Project] 👥 Verificando se usuário ID: ${user.id} é membro do time do projeto ID: ${id}`);
+  const { rows: permissionRows } = await pool.query(
+    `SELECT 1 FROM team t JOIN usuario_team ut ON t.id = ut.team_id WHERE t.projeto_id = $1 AND ut.usuario_id = $2`,
+    [id, user.id]
+  );
+  
+  if (permissionRows.length > 0) {
+    console.log(`[Repo: Project] 👥 Usuário é membro do time. Acesso concedido.`);
+    return project;
+  }
+  
+  console.log(`[Repo: Project] 🚫 Acesso negado para usuário comum. Retornando null.`);
+  return null;
 }
 
 export async function create({ nome, descricao, categoria_id, usuario_id }) {

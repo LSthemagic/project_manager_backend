@@ -39,7 +39,7 @@ async function buildApp() {
   app.register(userRoutes, { prefix: '/api/users' });
   app.register(teamRoutes, { prefix: '/api/teams' });
   app.register(projectRoutes, { prefix: '/api/projects' });
-  app.register(taskRoutes, { prefix: '/api/tasks' });
+  app.register(taskRoutes, { prefix: '/api' });
   app.register(contactRoutes, { prefix: '/api/contact' });
 
   return app;
