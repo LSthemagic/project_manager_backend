@@ -11,6 +11,7 @@ import fastifyMultipart from '@fastify/multipart';
 import { taskRoutes } from './modules/tasks/tasks.routes.js';
 import { contactRoutes } from './modules/contact/contact.routes.js';
 import { reportRoutes } from './modules/reports/reports.routes.js';
+import { searchRoutes } from './modules/search/search.routes.js';
 
 async function buildApp() {
   const app = fastify({
@@ -43,6 +44,7 @@ async function buildApp() {
   app.register(taskRoutes, { prefix: '/api' });
   app.register(contactRoutes, { prefix: '/api/contact' });
   app.register(reportRoutes, { prefix: '/api/reports' });
+  app.register(searchRoutes, { prefix: '/api/search' });
 
   return app;
 }
