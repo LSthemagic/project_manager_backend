@@ -12,6 +12,7 @@ import { taskRoutes } from './modules/tasks/tasks.routes.js';
 import { contactRoutes } from './modules/contact/contact.routes.js';
 import { reportRoutes } from './modules/reports/reports.routes.js';
 import { searchRoutes } from './modules/search/search.routes.js';
+import { auditRoutes } from './modules/admin/audit/audit.routes.js';
 
 async function buildApp() {
   const app = fastify({
@@ -45,6 +46,7 @@ async function buildApp() {
   app.register(contactRoutes, { prefix: '/api/contact' });
   app.register(reportRoutes, { prefix: '/api/reports' });
   app.register(searchRoutes, { prefix: '/api/search' });
+  app.register(auditRoutes, { prefix: '/api/admin/audit' });
 
   return app;
 }
