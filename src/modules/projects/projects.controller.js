@@ -1,5 +1,4 @@
 import * as repository from './projects.repository.js';
-// Reutilizando o repositório de times para verificar permissões
 import * as teamRepository from '../teams/teams.repository.js'; 
 
 export async function listProjects(request, reply) {
@@ -12,20 +11,11 @@ export async function getProject(request, reply) {
   const { id } = request.params;
   const user = request.session.user;
   
-  const project = await repository.findById(id);
-  if (!project) {
-    return reply.status(404).send({ message: 'Projeto não encontrado.' });
-  }
+  // A lógica de progresso já está no repositório, então nenhuma mudança é necessária aqui
+  const project = await repository.findById(id, user);
 
-  // Se não for admin/gerente, precisa verificar o acesso
-  if (user.tipo_usuario === 'comum') {
-    if (project.usuario_id !== user.id) {
-      const teams = await teamRepository.findTeamsByProjectId(id);
-      const isMember = teams.some(team => team.user_id === user.id);
-      if (!isMember) {
-        return reply.status(403).send({ message: 'Acesso negado a este projeto.' });
-      }
-    }
+  if (!project) {
+    return reply.status(404).send({ message: 'Projeto não encontrado ou acesso negado.' });
   }
 
   reply.send(project);
@@ -55,4 +45,21 @@ export async function deleteProject(request, reply) {
         return reply.status(404).send({ message: 'Projeto não encontrado.' });
     }
     reply.status(204).send();
+}
+
+export async function finishProject(request, reply) {
+  try {
+    const { id } = request.params;
+    const userId = request.session.user.id;
+    
+    const success = await repository.finish(id, userId);
+
+    if (success) {
+      reply.send({ message: 'Projeto finalizado com sucesso!' });
+    }
+  } catch (error) {
+    // Captura o erro lançado pela função do PostgreSQL (ex: tarefas pendentes)
+    request.log.error(error);
+    reply.status(400).send({ message: error.message });
+  }
 }
