@@ -1,0 +1,35 @@
+import fastify from 'fastify';
+import { pool } from './config/database.js';
+import fastifyCookie from '@fastify/cookie';
+import fastifySession from '@fastify/session';
+import { authRoutes } from './modules/auth/auth.routes.js'; 
+
+async function buildApp() {
+  const app = fastify({
+    logger: true,
+  });
+
+  app.register(fastifyCookie);
+  app.register(fastifySession, {
+    secret: process.env.SESSION_SECRET,
+    cookie: {
+      secure: false,
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 dias
+    },
+    saveUninitialized: false,
+  });
+
+  app.decorate('db', pool);
+
+  app.get('/health', async () => ({ status: 'ok' }));
+  app.get('/db-test', async (request, reply) => {
+    const result = await app.db.query('SELECT NOW()');
+    reply.send({ success: true, timestamp: result.rows[0].now });
+  });
+
+  app.register(authRoutes, { prefix: '/api/auth' });
+
+  return app;
+}
+
+export { buildApp };
