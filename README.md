@@ -53,40 +53,21 @@ API RESTful completa para um Sistema de Gerenciamento de Projetos, desenvolvida 
 
 3.  **Configure o Banco de Dados:**
     -   Garanta que seu servidor PostgreSQL esteja rodando.
-    -   Execute o script `script_postgresql.sql` para criar o banco, as tabelas e popular os dados iniciais. Você pode encontrar o script na pasta `database` do projeto geral.
+    -   Execute o script `script_postgresql.sql` para criar o banco, as tabelas e popular os dados iniciais.
 
 4.  **Configure as Variáveis de Ambiente:**
-    -   Crie um arquivo `.env` na raiz do projeto, baseado no `.env.example`.
+    -   Crie um arquivo `.env` na raiz do projeto.
     -   Preencha as variáveis, especialmente `DATABASE_URL` e `SESSION_SECRET`.
-
-    ```env
-    # .env.example
-    PORT=3333
-    DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE?sslmode=require"
-    SESSION_SECRET="gere_uma_string_longa_e_aleatoria_aqui"
-    SMTP_HOST="seu_smtp_host"
-    SMTP_PORT=587
-    SMTP_USER="seu_smtp_user"
-    SMTP_PASS="seu_smtp_pass"
-    ```
 
 ## ▶️ Executando a Aplicação
 
--   **Modo de Desenvolvimento (com auto-reload):**
+-   **Modo de Desenvolvimento:**
     ```bash
     npm run dev
     ```
-
--   **Modo de Produção:**
-    ```bash
-    npm start
-    ```
-
 A API estará disponível em `http://localhost:3333`.
 
 ## ✅ Executando os Testes
-
-Para rodar a suíte de testes automatizados, execute:
 
 ```bash
 npm test
