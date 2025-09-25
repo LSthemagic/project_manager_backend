@@ -67,7 +67,7 @@ API RESTful completa para um Sistema de Gerenciamento de Projetos, desenvolvida 
     ```
 -   **A API estará disponível em:**
     ```bash
-    (https://project-manager-backend-5wv2.onrender.com/)
+    https://project-manager-backend-5wv2.onrender.com/
     ```
 -   **O postman estará disponível em:**
     ```bash
