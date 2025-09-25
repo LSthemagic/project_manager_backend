@@ -32,7 +32,8 @@ async function buildApp() {
         'http://localhost:3000',
         'http://127.0.0.1:3000',
         'http://localhost:3001', 
-        'https://project-manager-backend-5wv2.onrender.com'
+        'https://project-manager-backend-5wv2.onrender.com',
+        'https://projeto-ifba.vercel.app'
       ];
 
       // Permitir requisições sem origin (como Postman, aplicações mobile, etc.)
