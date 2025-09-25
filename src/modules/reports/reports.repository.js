@@ -11,7 +11,7 @@ export async function getDashboardData() {
       COUNT(CASE WHEN t.status = 'pendente' THEN 1 END) as tasksPending,
       COUNT(CASE WHEN t.status = 'concluida' THEN 1 END) as tasksCompleted,
       COUNT(DISTINCT up.usuario_id) as teamMembers
-    FROM projetos p
+    FROM projeto p
     LEFT JOIN tarefas t ON p.id = t.projeto_id
     LEFT JOIN usuario_projeto up ON p.id = up.projeto_id
     WHERE p.data_inicio <= NOW() - INTERVAL '30 days'
@@ -56,7 +56,7 @@ export async function getPublicStats() {
       ROUND(AVG(CASE WHEN f.rating IS NOT NULL THEN f.rating END), 0) as satisfactionRate,
       COUNT(DISTINCT u.id) as totalUsers,
       true as supportAvailable
-    FROM projetos p
+    FROM projeto p
     CROSS JOIN usuarios u
     LEFT JOIN feedback f ON p.id = f.projeto_id
   `);
