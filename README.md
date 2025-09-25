@@ -65,8 +65,14 @@ API RESTful completa para um Sistema de Gerenciamento de Projetos, desenvolvida 
     ```bash
     npm run dev
     ```
-A API estará disponível em `https://project-manager-backend-5wv2.onrender.com/`.
-O postman estará disponível em `https://warped-robot-985060.postman.co/workspace/My-Workspace~46808a60-3796-4320-8263-57e1b7c6a1d7/collection/32370891-ebdecf35-1c6f-4c42-a312-500b272ea133?action=share&source=copy-link&creator=32370891`.
+-   **A API estará disponível em:**
+    ```bash
+    (https://project-manager-backend-5wv2.onrender.com/)
+    ```
+-   **O postman estará disponível em:**
+    ```bash
+    https://warped-robot-985060.postman.co/workspace/My-Workspace~46808a60-3796-4320-8263-57e1b7c6a1d7/collection/32370891-ebdecf35-1c6f-4c42-a312-500b272ea133?action=share&source=copy-link&creator=32370891
+    ```
 
 ## ✅ Executando os Testes
 
