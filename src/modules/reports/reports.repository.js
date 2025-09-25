@@ -1,39 +1,50 @@
 import { pool } from '../../config/database.js';
 
 export async function getDashboardData() {
-  // Dados atuais
+  // 1. Busca os dados atuais diretamente da sua view, que já é otimizada.
   const { rows: current } = await pool.query('SELECT * FROM dashboard_executivo');
+  const currentData = current[0] || {};
 
-  // Dados do período anterior (30 dias atrás)
+  // 2. Busca dados de 30 dias atrás para comparação.
+  // Esta query foi ajustada para usar as tabelas e status corretos do seu schema.
   const { rows: previous } = await pool.query(`
     SELECT
-      COUNT(CASE WHEN p.status = 'ativo' THEN 1 END) as projectsActive,
-      COUNT(CASE WHEN t.status = 'pendente' THEN 1 END) as tasksPending,
-      COUNT(CASE WHEN t.status = 'concluida' THEN 1 END) as tasksCompleted,
-      COUNT(DISTINCT up.usuario_id) as teamMembers
-    FROM projeto p
-    LEFT JOIN tarefa t ON p.id = t.projeto_id
-    LEFT JOIN usuario_projeto up ON p.id = up.projeto_id
-    WHERE p.data_inicio <= NOW() - INTERVAL '30 days'
+      (SELECT COUNT(*) FROM projeto WHERE status != 'concluido' AND data_criacao <= NOW() - INTERVAL '30 days') AS projetos_ativos,
+      (SELECT COUNT(*) FROM tarefa t JOIN status_tarefa st ON t.status_id = st.id WHERE st.nome != 'Concluída' AND t.data_criacao <= NOW() - INTERVAL '30 days') AS tarefas_pendentes,
+      (SELECT COUNT(*) FROM tarefa t JOIN status_tarefa st ON t.status_id = st.id WHERE st.nome = 'Concluída' AND t.data_atualizacao <= NOW() - INTERVAL '30 days') AS tarefas_concluidas,
+      (SELECT COALESCE(SUM(horas), 0) FROM TimeLog WHERE data_registro BETWEEN (NOW() - INTERVAL '60 days') AND (NOW() - INTERVAL '30 days')) AS horas_mes_anterior
   `);
-
-  const currentData = current[0] || {};
   const previousData = previous[0] || {};
 
-  // Calcular mudanças percentuais
-  const calculateChange = (current, previous) => {
-    if (!previous || previous === 0) return '+0%';
+  // 3. Função para calcular a mudança percentual entre o período atual e o anterior.
+  const calculateChange = (currentValue, previousValue) => {
+    const current = Number(currentValue) || 0;
+    const previous = Number(previousValue) || 0;
+
+    if (previous === 0) {
+      return current > 0 ? '+100%' : '0%';
+    }
     const change = ((current - previous) / previous) * 100;
     return `${change >= 0 ? '+' : ''}${Math.round(change)}%`;
   };
 
+  // 4. Retorna os dados atuais e o cálculo da variação percentual.
   return {
-    ...currentData,
+    // Dados atuais da view
+    total_usuarios_ativos: currentData.total_usuarios_ativos,
+    projetos_ativos: currentData.projetos_ativos,
+    tarefas_pendentes: currentData.tarefas_pendentes,
+    tarefas_concluidas: currentData.tarefas_concluidas,
+    horas_mes_atual: currentData.horas_mes_atual,
+    progresso_medio_projetos: currentData.progresso_medio_projetos,
+    projetos_atrasados: currentData.projetos_atrasados,
+    atividades_ultima_semana: currentData.atividades_ultima_semana,
+    // Objeto com as mudanças percentuais
     changes: {
-      projectsActive: calculateChange(currentData.projectsActive, previousData.projectsActive),
-      tasksPending: calculateChange(currentData.tasksPending, previousData.tasksPending),
-      tasksCompleted: calculateChange(currentData.tasksCompleted, previousData.tasksCompleted),
-      teamMembers: calculateChange(currentData.teamMembers, previousData.teamMembers)
+      projetos_ativos: calculateChange(currentData.projetos_ativos, previousData.projetos_ativos),
+      tarefas_pendentes: calculateChange(currentData.tarefas_pendentes, previousData.tarefas_pendentes),
+      tarefas_concluidas: calculateChange(currentData.tarefas_concluidas, previousData.tarefas_concluidas),
+      horas_mes_atual: calculateChange(currentData.horas_mes_atual, previousData.horas_mes_anterior)
     }
   };
 }
