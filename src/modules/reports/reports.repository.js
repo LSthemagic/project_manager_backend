@@ -12,7 +12,7 @@ export async function getDashboardData() {
       COUNT(CASE WHEN t.status = 'concluida' THEN 1 END) as tasksCompleted,
       COUNT(DISTINCT up.usuario_id) as teamMembers
     FROM projeto p
-    LEFT JOIN tarefas t ON p.id = t.projeto_id
+    LEFT JOIN tarefa t ON p.id = t.projeto_id
     LEFT JOIN usuario_projeto up ON p.id = up.projeto_id
     WHERE p.data_inicio <= NOW() - INTERVAL '30 days'
   `);
