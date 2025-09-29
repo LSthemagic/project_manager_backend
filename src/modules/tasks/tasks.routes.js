@@ -43,7 +43,7 @@ export async function taskRoutes(app) {
     return reply.status(201).send(rows[0]);
   });
 
-  app.post('/attachments/:attachmentId/resize', { preHandler: [checkProjectAccess] }, async (request, reply) => {
+  app.post('/attachments/:attachmentId/resize',  async (request, reply) => {
     try {
       const { attachmentId } = request.params;
       const { width } = request.query;
@@ -73,6 +73,8 @@ export async function taskRoutes(app) {
       await sharp(originalPath)
         .resize({ width: newWidth })
         .toFile(newPath);
+
+      
 
       return reply.send({
         message: 'Imagem redimensionada com sucesso!',
