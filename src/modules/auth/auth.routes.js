@@ -4,6 +4,7 @@ import { pipeline } from 'node:stream';
 import { promisify } from 'node:util';
 import fs from 'node:fs';
 import path from 'node:path';
+import { profile } from 'node:console';
 
 const pump = promisify(pipeline);
 
@@ -60,6 +61,8 @@ export async function authRoutes(app) {
       nome: user.nome,
       email: user.email,
       tipo_usuario: user.tipo_usuario,
+      preferencias: user.preferencias || {},
+      profile_picture: user.profile_picture || null
     };
     
     console.log(`User ${user.email} logged in. Remember me: ${rememberMe ? 'Yes' : 'No'}`);
