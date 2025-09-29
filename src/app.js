@@ -94,7 +94,7 @@ async function buildApp() {
   // Configuração para servir arquivos estáticos do diretório uploads
   await app.register(fastifyStatic, {
     root: path.join(process.cwd(), 'uploads'),
-    prefix: '/uploads/',
+    prefix: '/api/uploads/',
   });
 
   app.get('/health', async () => ({ status: 'ok' }));
