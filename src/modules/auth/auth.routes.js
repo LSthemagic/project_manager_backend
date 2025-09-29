@@ -1,5 +1,11 @@
 import bcrypt from 'bcrypt';
 import { updatePreferences } from '../users/users.repository.js';
+import { pipeline } from 'node:stream';
+import { promisify } from 'node:util';
+import fs from 'node:fs';
+import path from 'node:path';
+
+const pump = promisify(pipeline);
 
 async function ensureAuthenticated(request, reply) {
   if (!request.session.user) {
@@ -120,6 +126,63 @@ export async function authRoutes(app) {
     request.session.user = updatedUser;
 
     return reply.send({ message: 'Perfil atualizado com sucesso!', user: updatedUser });
+  });
+
+  // Upload avatar/profile picture
+  app.put('/me/avatar', { preHandler: [ensureAuthenticated] }, async (request, reply) => {
+    try {
+      const userId = request.session.user.id;
+
+      const data = await request.file();
+      if (!data) {
+        return reply.status(400).send({ message: 'Nenhum arquivo enviado.' });
+      }
+
+      const uniqueFilename = `${Date.now()}-${data.filename}`;
+      const uploadPath = path.join('uploads', uniqueFilename);
+
+      // Salvar arquivo
+      await pump(data.file, fs.createWriteStream(uploadPath));
+
+      // Atualizar o caminho da imagem no banco (campo profile_picture)
+      const publicPath = `/api/uploads/${uniqueFilename}`;
+      // Tenta atualizar o usuário com o caminho da imagem.
+      try {
+        const { rows } = await app.db.query(
+          'UPDATE usuario SET profile_picture = $1, data_atualizacao = NOW() WHERE id = $2 RETURNING id, nome, email, tipo_usuario, profile_picture',
+          [publicPath, userId]
+        );
+
+        const updatedUser = rows[0];
+        request.session.user = updatedUser;
+
+        return reply.send({ message: 'Avatar enviado com sucesso!', user: updatedUser });
+      } catch (err) {
+        // Se a coluna profile_picture não existir, criar e tentar novamente (ajuda em ambientes de desenvolvimento)
+        if (err && err.code === '42703') {
+          app.log.info('Coluna profile_picture não encontrada — criando a coluna automaticamente.');
+          try {
+            await app.db.query("ALTER TABLE usuario ADD COLUMN profile_picture TEXT");
+            const { rows } = await app.db.query(
+              'UPDATE usuario SET profile_picture = $1, data_atualizacao = NOW() WHERE id = $2 RETURNING id, nome, email, tipo_usuario, profile_picture',
+              [publicPath, userId]
+            );
+            const updatedUser = rows[0];
+            request.session.user = updatedUser;
+            return reply.send({ message: 'Avatar enviado com sucesso! (coluna criada)', user: updatedUser });
+          } catch (innerErr) {
+            app.log.error(innerErr);
+            return reply.status(500).send({ message: 'Erro ao atualizar usuário após criar coluna profile_picture.' });
+          }
+        }
+
+        app.log.error(err);
+        return reply.status(500).send({ message: 'Erro ao fazer upload do avatar.' });
+      }
+    } catch (error) {
+      app.log.error(error);
+      return reply.status(500).send({ message: 'Erro ao fazer upload do avatar.' });
+    }
   });
 
   app.put('/change-password', { preHandler: [ensureAuthenticated] }, async (request, reply) => {
