@@ -131,3 +131,16 @@ export async function finish(id, userId) {
   return rows[0].finalizar_projeto;
 }
 
+export async function findMembersByProjectId(projectId) {
+  const { rows } = await pool.query(
+    `SELECT u.id, u.nome, u.email, ut.papel
+     FROM usuario u
+     JOIN usuario_team ut ON u.id = ut.usuario_id
+     JOIN team t ON ut.team_id = t.id
+     WHERE t.projeto_id = $1
+     ORDER BY u.nome`,
+    [projectId]
+  );
+  return rows;
+}
+

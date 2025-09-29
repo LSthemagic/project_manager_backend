@@ -72,3 +72,25 @@ export async function getTaskStatuses(request, reply) {
   const statuses = await repository.getAllStatuses();
   return reply.send(statuses);
 }
+
+export async function listTaskTags(request, reply) {
+  const { taskId } = request.params;
+  const tags = await repository.findTagsByTaskId(taskId);
+  return reply.send(tags);
+}
+
+export async function addTaskTag(request, reply) {
+  const { taskId } = request.params;
+  const { etiqueta_id } = request.body;
+  const newTagLink = await repository.addTagToTask(taskId, etiqueta_id);
+  return reply.status(201).send(newTagLink);
+}
+
+export async function removeTaskTag(request, reply) {
+  const { taskId, tagId } = request.params;
+  const success = await repository.removeTagFromTask(taskId, tagId);
+  if (!success) {
+    return reply.status(404).send({ message: 'Etiqueta não encontrada nesta tarefa.' });
+  }
+  return reply.status(204).send();
+}

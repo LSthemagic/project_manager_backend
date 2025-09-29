@@ -42,7 +42,7 @@ export async function taskRoutes(app) {
 
     return reply.status(201).send(rows[0]);
   });
-  
+
   app.post('/attachments/:attachmentId/resize', { preHandler: [checkProjectAccess] }, async (request, reply) => {
     try {
       const { attachmentId } = request.params;
@@ -69,13 +69,13 @@ export async function taskRoutes(app) {
       const baseFilename = path.basename(attachment.nome_arquivo, fileExtension);
       const newFilename = `${baseFilename}-${newWidth}w${fileExtension}`;
       const newPath = path.join('uploads', newFilename);
-      
+
       await sharp(originalPath)
         .resize({ width: newWidth })
         .toFile(newPath);
-      
-      return reply.send({ 
-        message: 'Imagem redimensionada com sucesso!', 
+
+      return reply.send({
+        message: 'Imagem redimensionada com sucesso!',
         newPath: newPath
       });
 
@@ -84,4 +84,8 @@ export async function taskRoutes(app) {
       return reply.status(500).send({ message: 'Ocorreu um erro ao redimensionar a imagem.' });
     }
   });
+
+  app.get('/tasks/:taskId/tags', { preHandler: [checkProjectAccess] }, controller.listTaskTags);
+  app.post('/tasks/:taskId/tags', { preHandler: [checkProjectAccess] }, controller.addTaskTag);
+  app.delete('/tasks/:taskId/tags/:tagId', { preHandler: [checkProjectAccess] }, controller.removeTaskTag);
 }

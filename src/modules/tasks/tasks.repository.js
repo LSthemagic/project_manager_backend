@@ -69,3 +69,29 @@ export async function getAllStatuses() {
   const { rows } = await pool.query('SELECT id, nome, descricao, cor FROM status_tarefa ORDER BY id');
   return rows;
 }
+
+export async function findTagsByTaskId(taskId) {
+  const { rows } = await pool.query(
+    `SELECT e.* FROM etiqueta e
+     JOIN tarefa_etiqueta te ON e.id = te.etiqueta_id
+     WHERE te.tarefa_id = $1 ORDER BY e.nome`,
+    [taskId]
+  );
+  return rows;
+}
+
+export async function addTagToTask(taskId, tagId) {
+  const { rows } = await pool.query(
+    'INSERT INTO tarefa_etiqueta (tarefa_id, etiqueta_id) VALUES ($1, $2) RETURNING *',
+    [taskId, tagId]
+  );
+  return rows[0];
+}
+
+export async function removeTagFromTask(taskId, tagId) {
+  const { rowCount } = await pool.query(
+    'DELETE FROM tarefa_etiqueta WHERE tarefa_id = $1 AND etiqueta_id = $2',
+    [taskId, tagId]
+  );
+  return rowCount > 0;
+}

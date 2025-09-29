@@ -22,5 +22,6 @@ export async function projectRoutes(app) {
   app.put('/:id', { preHandler: [ensureAdminOrManager] }, controller.updateProject);
   app.delete('/:id', { preHandler: [ensureAdminOrManager] }, controller.deleteProject);
 
+  app.get('/:id/members', controller.listProjectMembers);
   app.post('/:id/finish', { preHandler: [ensureAdminOrManager] }, controller.finishProject);
 }

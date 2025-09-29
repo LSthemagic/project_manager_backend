@@ -80,3 +80,9 @@ export async function finishProject(request, reply) {
     return reply.status(400).send({ message: error.message });
   }
 }
+
+export async function listProjectMembers(request, reply) {
+  const { id } = request.params;
+  const members = await repository.findMembersByProjectId(id);
+  return reply.send(members);
+}
