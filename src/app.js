@@ -3,6 +3,8 @@ import { pool } from './config/database.js';
 import fastifyCookie from '@fastify/cookie';
 import fastifySession from '@fastify/session';
 import fastifyCors from '@fastify/cors';
+import fastifyStatic from '@fastify/static';
+import path from 'node:path';
 import { authRoutes } from './modules/auth/auth.routes.js';
 import { categoryRoutes } from './modules/categories/categories.routes.js';
 import { userRoutes } from './modules/users/users.routes.js';
@@ -88,6 +90,12 @@ async function buildApp() {
   });
 
   app.register(fastifyMultipart);
+
+  // Configuração para servir arquivos estáticos do diretório uploads
+  await app.register(fastifyStatic, {
+    root: path.join(process.cwd(), 'uploads'),
+    prefix: '/uploads/',
+  });
 
   app.get('/health', async () => ({ status: 'ok' }));
   app.get('/db-test', async (request, reply) => {
