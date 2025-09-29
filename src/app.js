@@ -95,6 +95,7 @@ async function buildApp() {
     reply.send({ success: true, timestamp: result.rows[0].now });
   });
 
+  
   app.register(authRoutes, { prefix: '/api/auth' });
   app.register(categoryRoutes, { prefix: '/api/categories' });
   app.register(userRoutes, { prefix: '/api/users' });
