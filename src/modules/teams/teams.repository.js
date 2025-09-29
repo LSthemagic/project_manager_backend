@@ -2,7 +2,7 @@ import { pool } from '../../config/database.js';
 
 export async function findMembersByTeamId(teamId) {
   const { rows } = await pool.query(
-    `SELECT u.id, u.nome, u.email, ut.papel
+    `SELECT u.id, u.nome, u.email, ut.papel, u.profile_picture
      FROM usuario_team ut
      JOIN usuario u ON u.id = ut.usuario_id
      WHERE ut.team_id = $1`,

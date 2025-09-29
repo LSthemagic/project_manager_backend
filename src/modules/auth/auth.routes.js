@@ -138,20 +138,26 @@ export async function authRoutes(app) {
         return reply.status(400).send({ message: 'Nenhum arquivo enviado.' });
       }
 
-      const uniqueFilename = `${Date.now()}-${data.filename}`;
-      const uploadPath = path.join('uploads', uniqueFilename);
+  const uniqueFilename = `${Date.now()}-${data.filename}`;
+  const uploadPath = path.join('uploads', uniqueFilename);
 
-      // Salvar arquivo
-      await pump(data.file, fs.createWriteStream(uploadPath));
+  app.log.info({ filename: data.filename, uniqueFilename, uploadPath }, 'Iniciando upload do avatar');
+
+  // Salvar arquivo
+  await pump(data.file, fs.createWriteStream(uploadPath));
+
+  app.log.info({ uploadPath }, 'Arquivo salvo com sucesso');
 
       // Atualizar o caminho da imagem no banco (campo profile_picture)
-      const publicPath = `/api/uploads/${uniqueFilename}`;
+  const publicPath = `/api/uploads/${uniqueFilename}`;
+  app.log.info({ publicPath }, 'publicPath definido para usuário');
       // Tenta atualizar o usuário com o caminho da imagem.
       try {
-        const { rows } = await app.db.query(
-          'UPDATE usuario SET profile_picture = $1, data_atualizacao = NOW() WHERE id = $2 RETURNING id, nome, email, tipo_usuario, profile_picture',
-          [publicPath, userId]
-        );
+        const sql = 'UPDATE usuario SET profile_picture = $1, data_atualizacao = NOW() WHERE id = $2 RETURNING id, nome, email, tipo_usuario, profile_picture';
+        app.log.info({ sql, params: [publicPath, userId] }, 'Executando UPDATE de profile_picture');
+        const { rows } = await app.db.query(sql, [publicPath, userId]);
+
+        app.log.info({ rows }, 'Resultado do UPDATE de profile_picture');
 
         const updatedUser = rows[0];
         request.session.user = updatedUser;
@@ -160,7 +166,7 @@ export async function authRoutes(app) {
       } catch (err) {
         // Se a coluna profile_picture não existir, criar e tentar novamente (ajuda em ambientes de desenvolvimento)
         if (err && err.code === '42703') {
-          app.log.info('Coluna profile_picture não encontrada — criando a coluna automaticamente.');
+          app.log.info('Coluna profile_picture não encontrada — criando a coluna automaticamente.', { err });
           try {
             await app.db.query("ALTER TABLE usuario ADD COLUMN profile_picture TEXT");
             const { rows } = await app.db.query(
@@ -171,16 +177,15 @@ export async function authRoutes(app) {
             request.session.user = updatedUser;
             return reply.send({ message: 'Avatar enviado com sucesso! (coluna criada)', user: updatedUser });
           } catch (innerErr) {
-            app.log.error(innerErr);
+            app.log.error({ innerErr }, 'Erro ao criar coluna profile_picture');
             return reply.status(500).send({ message: 'Erro ao atualizar usuário após criar coluna profile_picture.' });
           }
         }
-
-        app.log.error(err);
+        app.log.error({ err }, 'Erro ao executar UPDATE de profile_picture');
         return reply.status(500).send({ message: 'Erro ao fazer upload do avatar.' });
       }
     } catch (error) {
-      app.log.error(error);
+      app.log.error({ error }, 'Erro geral no handler de upload de avatar');
       return reply.status(500).send({ message: 'Erro ao fazer upload do avatar.' });
     }
   });
