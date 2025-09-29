@@ -10,7 +10,9 @@ const pump = promisify(pipeline);
 
 export async function taskRoutes(app) {
 
- app.get('/projects/:projectId/tasks', { preHandler: [checkProjectAccess] }, controller.listTasksForProject);
+  app.get('/task-statuses', controller.getTaskStatuses);
+
+  app.get('/projects/:projectId/tasks', { preHandler: [checkProjectAccess] }, controller.listTasksForProject);
   app.post('/projects/:projectId/tasks', { preHandler: [checkProjectAccess] }, controller.createTaskInProject);
 
   app.get('/tasks/:taskId', { preHandler: [checkProjectAccess] }, controller.getTask);
