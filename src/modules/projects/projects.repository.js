@@ -65,39 +65,42 @@ export async function findById(id, user) {
   return null;
 }
 
-export async function create({ nome, descricao, categoria_id, usuario_id }) {
-    const client = await pool.connect();
-    try {
-      await client.query('BEGIN');
-  
-      // 1. Cria o projeto
-      const projectResult = await client.query(
-        'INSERT INTO projeto (nome, descricao, categoria_id, usuario_id) VALUES ($1, $2, $3, $4) RETURNING *',
-        [nome, descricao, categoria_id, usuario_id]
-      );
-      const newProject = projectResult.rows[0];
-  
-      // 2. Cria uma equipe para o projeto e define o criador como líder
-      const teamResult = await client.query(
-          'INSERT INTO team (nome, projeto_id, lider_id) VALUES ($1, $2, $3) RETURNING id',
-          [`Equipe ${newProject.nome}`, newProject.id, usuario_id]
-      );
-      const newTeam = teamResult.rows[0];
-      
-      // 3. Adiciona o líder à tabela de membros (usuario_team)
-      await client.query(
-          'INSERT INTO usuario_team (usuario_id, team_id, papel) VALUES ($1, $2, $3)',
-          [usuario_id, newTeam.id, 'lider']
-      );
-  
-      await client.query('COMMIT');
-      return newProject;
-    } catch (e) {
-      await client.query('ROLLBACK');
-      throw e;
-    } finally {
-      client.release();
-    }
+export async function create({ nome, descricao, categoria_id, usuario_id, status, prioridade, data_inicio, data_fim, orcamento }) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // 1. Cria o projeto com todos os campos
+    const projectResult = await client.query(
+    `INSERT INTO projeto 
+      (nome, descricao, categoria_id, usuario_id, status, prioridade, data_inicio, data_fim, orcamento) 
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+     RETURNING *`,
+    [nome, descricao, categoria_id, usuario_id, status, prioridade, data_inicio, data_fim, orcamento]
+    );
+    const newProject = projectResult.rows[0];
+
+    // 2. Cria uma equipe para o projeto e define o criador como líder
+    const teamResult = await client.query(
+      'INSERT INTO team (nome, projeto_id, lider_id) VALUES ($1, $2, $3) RETURNING id',
+      [`Equipe ${newProject.nome}`, newProject.id, usuario_id]
+    );
+    const newTeam = teamResult.rows[0];
+    
+    // 3. Adiciona o líder à tabela de membros (usuario_team)
+    await client.query(
+      'INSERT INTO usuario_team (usuario_id, team_id, papel) VALUES ($1, $2, $3)',
+      [usuario_id, newTeam.id, 'lider']
+    );
+
+    await client.query('COMMIT');
+    return newProject;
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
 }
 
 export async function update(id, { nome, descricao, categoria_id, status, prioridade, data_inicio, data_fim, orcamento }) {

@@ -21,10 +21,29 @@ export async function getProject(request, reply) {
 }
 
 export async function createProject(request, reply) {
-  const { nome, descricao, categoria_id } = request.body;
+  const {
+    nome,
+    descricao,
+    categoria_id,
+    data_inicio,
+    data_fim,
+    orcamento,
+    prioridade,
+    status
+  } = request.body;
   const usuario_id = request.session.user.id;
-  
-  const newProject = await repository.create({ nome, descricao, categoria_id, usuario_id });
+
+  const newProject = await repository.create({
+    nome,
+    descricao,
+    categoria_id,
+    data_inicio,
+    data_fim,
+    orcamento,
+    prioridade,
+    status,
+    usuario_id
+  });
   return reply.status(201).send(newProject);
 }
 
