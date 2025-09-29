@@ -17,13 +17,20 @@ export async function findAll(user) {
 }
 
 export async function findById(id, user) {
-  const { rows } = await pool.query('SELECT * FROM projeto WHERE id = $1', [id]);
+  // CORREÇÃO: A query agora faz um LEFT JOIN com a tabela team para incluir team_id e lider_id
+  const { rows } = await pool.query(
+    `SELECT p.*, t.id as team_id, t.lider_id
+     FROM projeto p
+     LEFT JOIN team t ON t.projeto_id = p.id
+     WHERE p.id = $1`,
+    [id]
+  );
   const project = rows[0];
 
   if (!project) return null;
 
+  // O resto da lógica de permissão e progresso permanece a mesma
   if (user.tipo_usuario === 'admin' || user.tipo_usuario === 'gerente') {
-    // ADIÇÃO: Busca o progresso usando a função do banco
     const { rows: progressResult } = await pool.query(
       'SELECT calcular_progresso_projeto($1) as progresso',
       [id]
@@ -59,17 +66,54 @@ export async function findById(id, user) {
 }
 
 export async function create({ nome, descricao, categoria_id, usuario_id }) {
-  const { rows } = await pool.query(
-    'INSERT INTO projeto (nome, descricao, categoria_id, usuario_id) VALUES ($1, $2, $3, $4) RETURNING *',
-    [nome, descricao, categoria_id, usuario_id]
-  );
-  return rows[0];
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+  
+      // 1. Cria o projeto
+      const projectResult = await client.query(
+        'INSERT INTO projeto (nome, descricao, categoria_id, usuario_id) VALUES ($1, $2, $3, $4) RETURNING *',
+        [nome, descricao, categoria_id, usuario_id]
+      );
+      const newProject = projectResult.rows[0];
+  
+      // 2. Cria uma equipe para o projeto e define o criador como líder
+      const teamResult = await client.query(
+          'INSERT INTO team (nome, projeto_id, lider_id) VALUES ($1, $2, $3) RETURNING id',
+          [`Equipe ${newProject.nome}`, newProject.id, usuario_id]
+      );
+      const newTeam = teamResult.rows[0];
+      
+      // 3. Adiciona o líder à tabela de membros (usuario_team)
+      await client.query(
+          'INSERT INTO usuario_team (usuario_id, team_id, papel) VALUES ($1, $2, $3)',
+          [usuario_id, newTeam.id, 'lider']
+      );
+  
+      await client.query('COMMIT');
+      return newProject;
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
 }
 
-export async function update(id, { nome, descricao, categoria_id, status, configuracoes }) {
+export async function update(id, { nome, descricao, categoria_id, status, prioridade, data_inicio, data_fim, orcamento }) {
     const { rows } = await pool.query(
-        'UPDATE projeto SET nome = $1, descricao = $2, categoria_id = $3, status = $4, configuracoes = $5, data_atualizacao = NOW() WHERE id = $6 RETURNING *',
-        [nome, descricao, categoria_id, status, configuracoes, id]
+        `UPDATE projeto 
+         SET nome = COALESCE($1, nome), 
+             descricao = COALESCE($2, descricao), 
+             categoria_id = COALESCE($3, categoria_id), 
+             status = COALESCE($4, status),
+             prioridade = COALESCE($5, prioridade),
+             data_inicio = COALESCE($6, data_inicio),
+             data_fim = COALESCE($7, data_fim),
+             orcamento = COALESCE($8, orcamento),
+             data_atualizacao = NOW() 
+         WHERE id = $9 RETURNING *`,
+        [nome, descricao, categoria_id, status, prioridade, data_inicio, data_fim, orcamento, id]
     );
     return rows[0];
 }
@@ -83,3 +127,4 @@ export async function finish(id, userId) {
   const { rows } = await pool.query('SELECT finalizar_projeto($1, $2)', [id, userId]);
   return rows[0].finalizar_projeto;
 }
+
