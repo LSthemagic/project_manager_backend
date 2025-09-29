@@ -33,7 +33,7 @@ export async function authRoutes(app) {
   });
 
   app.post('/login', async (request, reply) => {
-    const { email, senha } = request.body;
+    const { email, senha, rememberMe } = request.body;
     const { rows } = await app.db.query('SELECT * FROM usuario WHERE email = $1', [email]);
     const user = rows[0];
 
@@ -46,6 +46,7 @@ export async function authRoutes(app) {
       return reply.status(401).send({ message: 'Email ou senha inválidos.' });
     }
 
+    // Configurar dados da sessão
     request.session.user = {
       id: user.id,
       nome: user.nome,
@@ -53,7 +54,22 @@ export async function authRoutes(app) {
       tipo_usuario: user.tipo_usuario,
     };
 
-    return reply.send({ message: 'Login bem-sucedido!', user: request.session.user });
+    // Ajustar tempo de vida da sessão baseado em "rememberMe"
+    if (rememberMe) {
+      // 30 dias para "lembrar de mim"
+      request.session.cookie.maxAge = 1000 * 60 * 60 * 24 * 30;
+    } else {
+      // 24 horas para sessão normal
+      request.session.cookie.maxAge = 1000 * 60 * 60 * 24;
+    }
+
+    console.log(`User ${user.email} logged in. Remember me: ${rememberMe ? 'Yes' : 'No'}`);
+
+    return reply.send({
+      message: 'Login bem-sucedido!',
+      user: request.session.user,
+      sessionMaxAge: request.session.cookie.maxAge
+    });
   });
 
   app.put('/me/preferences', { preHandler: [ensureAuthenticated] }, async (request, reply) => {
@@ -68,7 +84,35 @@ export async function authRoutes(app) {
   });
 
   app.get('/me', { preHandler: [ensureAuthenticated] }, async (request, reply) => {
-    return reply.send({ user: request.session.user });
+    return reply.send({
+      user: request.session.user,
+      sessionInfo: {
+        maxAge: request.session.cookie.maxAge,
+        created: request.session.createdAt,
+        expires: new Date(Date.now() + request.session.cookie.maxAge).toISOString()
+      }
+    });
+  });
+
+  // Rota para verificar status da sessão (útil para debug)
+  app.get('/session-status', async (request, reply) => {
+    const hasSession = !!request.session;
+    const hasUser = !!(request.session && request.session.user);
+
+    return reply.send({
+      hasSession,
+      hasUser,
+      sessionId: request.session?.sessionId || null,
+      user: hasUser ? {
+        id: request.session.user.id,
+        email: request.session.user.email,
+        nome: request.session.user.nome
+      } : null,
+      sessionInfo: hasSession ? {
+        maxAge: request.session.cookie.maxAge,
+        expires: new Date(Date.now() + request.session.cookie.maxAge).toISOString()
+      } : null
+    });
   });
 
   app.put('/me', { preHandler: [ensureAuthenticated] }, async (request, reply) => {
@@ -108,10 +152,26 @@ export async function authRoutes(app) {
 
   app.post('/logout', async (request, reply) => {
     try {
-      await request.session.destroy();
-      return reply.send({ message: 'Logout realizado com sucesso.' });
+      const userEmail = request.session?.user?.email || 'unknown';
+      console.log(`User ${userEmail} logging out`);
+
+      if (request.session) {
+        await request.session.destroy();
+      }
+
+      // Limpar cookie explicitamente
+      reply.clearCookie('sessionId');
+
+      return reply.send({
+        message: 'Logout realizado com sucesso.',
+        timestamp: new Date().toISOString()
+      });
     } catch (err) {
-      return reply.status(500).send({ message: 'Erro ao fazer logout.' });
+      console.error('Error during logout:', err);
+      return reply.status(500).send({
+        message: 'Erro ao fazer logout.',
+        error: err.message
+      });
     }
   });
 }

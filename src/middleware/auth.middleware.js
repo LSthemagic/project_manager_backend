@@ -2,9 +2,48 @@ import { pool } from '../config/database.js';
 import * as projectRepository from '../modules/projects/projects.repository.js';
 
 export async function ensureAuthenticated(request, reply) {
-  if (!request.session.user) {
-    return reply.status(401).send({ message: 'Acesso negado. Por favor, faça login.' });
+  // Verificar se existe sessão
+  if (!request.session) {
+    console.warn('No session found in request');
+    return reply.status(401).send({
+      message: 'Sessão inválida. Por favor, faça login novamente.',
+      code: 'SESSION_INVALID'
+    });
   }
+
+  // Verificar se existe usuário na sessão
+  if (!request.session.user) {
+    console.warn('No user found in session');
+    return reply.status(401).send({
+      message: 'Acesso negado. Por favor, faça login.',
+      code: 'USER_NOT_AUTHENTICATED'
+    });
+  }
+
+  // Opcional: Verificar se o usuário ainda existe no banco (para casos de usuário deletado)
+  // Esta verificação pode ser comentada para melhor performance
+  /*
+  try {
+    const { rows } = await pool.query('SELECT id FROM usuario WHERE id = $1', [request.session.user.id]);
+    if (rows.length === 0) {
+      console.warn(`User ${request.session.user.id} not found in database`);
+      await request.session.destroy();
+      return reply.status(401).send({
+        message: 'Usuário não encontrado. Por favor, faça login novamente.',
+        code: 'USER_NOT_FOUND'
+      });
+    }
+  } catch (error) {
+    console.error('Error validating user in database:', error);
+    return reply.status(500).send({
+      message: 'Erro interno do servidor.',
+      code: 'INTERNAL_ERROR'
+    });
+  }
+  */
+
+  // Se chegou até aqui, está autenticado
+  console.log(`Authenticated user: ${request.session.user.id} (${request.session.user.email})`);
 }
 
 export async function checkProjectAccess(request, reply) {

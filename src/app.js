@@ -19,46 +19,87 @@ import { tagRoutes } from './modules/admin/tags/tags.routes.js';
 import { commentRoutes } from './modules/comments/comments.routes.js';
 import { subtaskRoutes } from './modules/subtasks/subtasks.routes.js';
 import { timelogRoutes } from './modules/timelogs/timelogs.routes.js';
+import { PostgreSQLSessionStore } from './lib/sessionStore.js';
 
 async function buildApp() {
   const app = fastify({
     logger: true,
   });
 
-  // Configurar CORS
+  // Configurar CORS otimizado para produção
   await app.register(fastifyCors, {
     origin: (origin, callback) => {
       const allowedOrigins = [
         'http://localhost:3000',
         'http://127.0.0.1:3000',
-        'http://localhost:3001', 
+        'http://localhost:3001',
         'https://project-manager-backend-5wv2.onrender.com',
-        'https://projeto-ifba.vercel.app'
+        'https://projeto-ifba.vercel.app',
+        // Adicionar possíveis URLs do Vercel preview
+        /^https:\/\/.*\.vercel\.app$/
       ];
 
       // Permitir requisições sem origin (como Postman, aplicações mobile, etc.)
-      if (!origin) return callback(null, true);
+      if (!origin) {
+        console.log('Request without origin (Postman, mobile app, etc.)');
+        return callback(null, true);
+      }
 
-      if (allowedOrigins.includes(origin)) {
+      // Verificar origins exatos
+      const isAllowed = allowedOrigins.some(allowedOrigin => {
+        if (typeof allowedOrigin === 'string') {
+          return allowedOrigin === origin;
+        } else if (allowedOrigin instanceof RegExp) {
+          return allowedOrigin.test(origin);
+        }
+        return false;
+      });
+
+      if (isAllowed) {
+        console.log(`CORS: Allowing origin ${origin}`);
         callback(null, true);
       } else {
+        console.warn(`CORS: Blocking origin ${origin}`);
         callback(new Error('Não permitido pelo CORS'), false);
       }
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'PATCH']
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'PATCH'],
+    allowedHeaders: [
+      'Origin',
+      'X-Requested-With',
+      'Content-Type',
+      'Accept',
+      'Authorization',
+      'Cookie',
+      'Set-Cookie'
+    ],
+    exposedHeaders: ['Set-Cookie']
   });
 
-  app.register(fastifyCookie);
+  app.register(fastifyCookie, {
+    secret: process.env.COOKIE_SECRET || 'default-cookie-secret-key',
+    parseOptions: {}
+  });
+
+  // Configuração de sessões otimizada para produção
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  // Inicializar store de sessões persistente
+  const sessionStore = new PostgreSQLSessionStore();
+
   app.register(fastifySession, {
-    secret: process.env.SESSION_SECRET || 'default-secret-key',
+    secret: process.env.SESSION_SECRET || 'default-session-secret-key-change-in-production',
     cookie: {
-      secure: false,
-      maxAge: 1000 * 60 * 60 * 24 * 7,
+      secure: isProduction, // HTTPS apenas em produção
+      maxAge: 1000 * 60 * 60 * 24 * 30, // 30 dias para persistência
       httpOnly: true,
-      sameSite: 'lax'
+      sameSite: isProduction ? 'none' : 'lax', // 'none' necessário para cross-origin em produção
+      domain: isProduction ? undefined : undefined // Deixar o navegador decidir
     },
     saveUninitialized: false,
+    rolling: true, // Renovar sessão a cada requisição
+    store: sessionStore // Usar store PostgreSQL
   });
 
   app.decorate('db', pool);
