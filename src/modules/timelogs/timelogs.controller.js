@@ -3,7 +3,7 @@ import * as repository from './timelogs.repository.js';
 export async function listTimeLogsForTask(request, reply) {
   const { taskId } = request.params;
   const timelogs = await repository.findByTaskId(taskId);
-  reply.send(timelogs);
+  return reply.send(timelogs);
 }
 
 export async function createTimeLog(request, reply) {
@@ -18,7 +18,7 @@ export async function createTimeLog(request, reply) {
     tarefa_id: taskId,
     usuario_id
   });
-  reply.status(201).send(newTimeLog);
+  return reply.status(201).send(newTimeLog);
 }
 
 export async function deleteTimeLog(request, reply) {
@@ -38,5 +38,5 @@ export async function deleteTimeLog(request, reply) {
   }
 
   await repository.remove(timelogId);
-  reply.status(204).send();
+  return reply.status(204).send();
 }

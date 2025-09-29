@@ -2,20 +2,20 @@ import * as repository from './reports.repository.js';
 
 export async function showDashboard(request, reply) {
   const data = await repository.getDashboardData();
-  reply.send(data);
+  return reply.send(data);
 }
 
 export async function showProjectsReport(request, reply) {
   const data = await repository.getProjectsReport();
-  reply.send(data);
+  return reply.send(data);
 }
 
 export async function showProductivityReport(request, reply) {
   const data = await repository.getProductivityReport();
-  reply.send(data);
+  return reply.send(data);
 }
 
 export async function showPublicStats(request, reply) {
   const data = await repository.getPublicStats();
-  reply.send(data);
+  return reply.send(data);
 }

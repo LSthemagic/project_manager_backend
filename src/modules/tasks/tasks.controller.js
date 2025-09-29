@@ -3,7 +3,7 @@ import * as repository from './tasks.repository.js';
 export async function listTasksForProject(request, reply) {
   const { projectId } = request.params;
   const tasks = await repository.findByProjectId(projectId);
-  reply.send(tasks);
+  return reply.send(tasks);
 }
 
 export async function getTask(request, reply) {
@@ -12,19 +12,23 @@ export async function getTask(request, reply) {
   if (!task) {
     return reply.status(404).send({ message: 'Tarefa não encontrada.' });
   }
-  reply.send(task);
+  return reply.send(task);
+}
+
+export async function listAttachmentsForTask(request, reply) {
+  const { taskId } = request.params;
+  const attachments = await repository.findAttachmentsByTaskId(taskId);
+  return reply.send(attachments);
 }
 
 export async function createTaskInProject(request, reply) {
   const { projectId } = request.params;
   const { titulo, descricao, responsavel_id, status_id, prioridade, estimativa_horas, data_inicio, data_fim } = request.body;
 
-  // Validação de campos obrigatórios
   if (!titulo || titulo.trim().length === 0) {
     return reply.status(400).send({ message: 'O título da tarefa é obrigatório.' });
   }
 
-  // Se status_id não foi fornecido, buscar o status "A Fazer" como padrão
   let finalStatusId = status_id;
   if (!finalStatusId) {
     const defaultStatus = await repository.getDefaultStatusId();
@@ -43,7 +47,7 @@ export async function createTaskInProject(request, reply) {
     data_fim,
   });
 
-  return reply.status(201).send(newTask); // Adicionado return para garantir que o fluxo seja encerrado
+  return reply.status(201).send(newTask);
 }
 
 export async function updateTask(request, reply) {
@@ -52,7 +56,7 @@ export async function updateTask(request, reply) {
   if (!updatedTask) {
     return reply.status(404).send({ message: 'Tarefa não encontrada.' });
   }
-  reply.send(updatedTask);
+  return reply.send(updatedTask);
 }
 
 export async function deleteTask(request, reply) {
@@ -61,10 +65,10 @@ export async function deleteTask(request, reply) {
   if (!success) {
     return reply.status(404).send({ message: 'Tarefa não encontrada.' });
   }
-  reply.status(204).send();
+  return reply.status(204).send();
 }
 
 export async function getTaskStatuses(request, reply) {
   const statuses = await repository.getAllStatuses();
-  reply.send(statuses);
+  return reply.send(statuses);
 }

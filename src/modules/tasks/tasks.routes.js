@@ -9,7 +9,6 @@ import { checkProjectAccess } from '../../middleware/auth.middleware.js';
 const pump = promisify(pipeline);
 
 export async function taskRoutes(app) {
-
   app.get('/task-statuses', controller.getTaskStatuses);
 
   app.get('/projects/:projectId/tasks', { preHandler: [checkProjectAccess] }, controller.listTasksForProject);
@@ -19,8 +18,10 @@ export async function taskRoutes(app) {
   app.put('/tasks/:taskId', { preHandler: [checkProjectAccess] }, controller.updateTask);
   app.delete('/tasks/:taskId', { preHandler: [checkProjectAccess] }, controller.deleteTask);
 
+  // --- ROTA ADICIONADA E CORRIGIDA AQUI ---
+  app.get('/tasks/:taskId/attachments', { preHandler: [checkProjectAccess] }, controller.listAttachmentsForTask);
 
-  app.post('/:taskId/attachments', { preHandler: [checkProjectAccess] }, async (request, reply) => {
+  app.post('/tasks/:taskId/attachments', { preHandler: [checkProjectAccess] }, async (request, reply) => {
     const { taskId } = request.params;
     const userId = request.session.user.id;
 
@@ -39,7 +40,7 @@ export async function taskRoutes(app) {
       [data.filename, uploadPath, data.mimetype, data.file.bytesRead, taskId, userId]
     );
 
-    reply.status(201).send(rows[0]);
+    return reply.status(201).send(rows[0]);
   });
   
   app.post('/attachments/:attachmentId/resize', { preHandler: [checkProjectAccess] }, async (request, reply) => {
@@ -73,15 +74,14 @@ export async function taskRoutes(app) {
         .resize({ width: newWidth })
         .toFile(newPath);
       
-      reply.send({ 
+      return reply.send({ 
         message: 'Imagem redimensionada com sucesso!', 
         newPath: newPath
       });
 
     } catch (error) {
       app.log.error(error);
-      reply.status(500).send({ message: 'Ocorreu um erro ao redimensionar a imagem.' });
+      return reply.status(500).send({ message: 'Ocorreu um erro ao redimensionar a imagem.' });
     }
   });
-
 }

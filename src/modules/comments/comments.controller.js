@@ -3,7 +3,7 @@ import * as repository from './comments.repository.js';
 export async function listCommentsForTask(request, reply) {
   const { taskId } = request.params;
   const comments = await repository.findByTaskId(taskId);
-  reply.send(comments);
+  return reply.send(comments);
 }
 
 export async function createComment(request, reply) {
@@ -12,7 +12,7 @@ export async function createComment(request, reply) {
   const usuario_id = request.session.user.id;
 
   const newComment = await repository.create({ conteudo, tarefa_id: taskId, usuario_id });
-  reply.status(201).send(newComment);
+  return reply.status(201).send(newComment);
 }
 
 export async function deleteComment(request, reply) {
@@ -32,5 +32,5 @@ export async function deleteComment(request, reply) {
   }
 
   await repository.remove(commentId);
-  reply.status(204).send();
+  return reply.status(204).send();
 }

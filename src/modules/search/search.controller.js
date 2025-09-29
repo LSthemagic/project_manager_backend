@@ -9,5 +9,5 @@ export async function performSearch(request, reply) {
   }
 
   const results = await repository.searchTasks(q, user);
-  reply.send(results);
+  return reply.send(results);
 }

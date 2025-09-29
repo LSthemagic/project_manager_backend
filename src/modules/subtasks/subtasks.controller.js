@@ -3,14 +3,14 @@ import * as repository from './subtasks.repository.js';
 export async function listSubtasks(request, reply) {
   const { taskId } = request.params;
   const subtasks = await repository.findByTaskId(taskId);
-  reply.send(subtasks);
+  return reply.send(subtasks);
 }
 
 export async function createSubtask(request, reply) {
   const { taskId } = request.params;
   const { titulo } = request.body;
   const newSubtask = await repository.create({ titulo, tarefa_id: taskId });
-  reply.status(201).send(newSubtask);
+  return reply.status(201).send(newSubtask);
 }
 
 export async function updateSubtask(request, reply) {
@@ -28,7 +28,7 @@ export async function updateSubtask(request, reply) {
   };
 
   const updatedSubtask = await repository.update(subtaskId, updatedData);
-  reply.send(updatedSubtask);
+  return reply.send(updatedSubtask);
 }
 
 export async function deleteSubtask(request, reply) {
@@ -37,5 +37,5 @@ export async function deleteSubtask(request, reply) {
   if (!success) {
     return reply.status(404).send({ message: 'Sub-tarefa não encontrada.' });
   }
-  reply.status(204).send();
+  return reply.status(204).send();
 }

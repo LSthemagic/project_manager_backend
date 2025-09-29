@@ -2,7 +2,7 @@ import * as repository from './categories.repository.js';
 
 export async function listCategories(request, reply) {
   const categories = await repository.findAll();
-  reply.send(categories);
+  return reply.send(categories);
 }
 
 export async function getCategory(request, reply) {
@@ -11,12 +11,12 @@ export async function getCategory(request, reply) {
   if (!category) {
     return reply.status(404).send({ message: 'Categoria não encontrada.' });
   }
-  reply.send(category);
+  return reply.send(category);
 }
 
 export async function createCategory(request, reply) {
   const newCategory = await repository.create(request.body);
-  reply.status(201).send(newCategory);
+  return reply.status(201).send(newCategory);
 }
 
 export async function updateCategory(request, reply) {
@@ -25,7 +25,7 @@ export async function updateCategory(request, reply) {
   if (!updatedCategory) {
     return reply.status(404).send({ message: 'Categoria não encontrada.' });
   }
-  reply.send(updatedCategory);
+  return reply.send(updatedCategory);
 }
 
 export async function deleteCategory(request, reply) {
@@ -34,5 +34,5 @@ export async function deleteCategory(request, reply) {
   if (!success) {
     return reply.status(404).send({ message: 'Categoria não encontrada.' });
   }
-  reply.status(204).send();
+  return reply.status(204).send();
 }

@@ -10,10 +10,14 @@ export async function findById(id) {
   return rows[0];
 }
 
+export async function findAttachmentsByTaskId(taskId) {
+  const { rows } = await pool.query('SELECT * FROM anexo WHERE tarefa_id = $1 ORDER BY data_upload DESC', [taskId]);
+  return rows;
+}
+
 export async function getDefaultStatusId() {
   const { rows } = await pool.query(`SELECT id FROM status_tarefa WHERE nome = 'A Fazer' LIMIT 1`);
   if (rows.length === 0) {
-    // Se não encontrar "A Fazer", pegar o primeiro status disponível
     const fallback = await pool.query(`SELECT id FROM status_tarefa ORDER BY id LIMIT 1`);
     return fallback.rows[0]?.id || 1;
   }
@@ -37,7 +41,6 @@ export async function create({ titulo, descricao, projeto_id, responsavel_id, st
   return rows[0];
 }
 
-
 export async function update(id, { titulo, descricao, responsavel_id, status_id, prioridade, estimativa_horas, data_inicio, data_fim }) {
   const { rows } = await pool.query(
     `UPDATE tarefa
@@ -56,7 +59,6 @@ export async function update(id, { titulo, descricao, responsavel_id, status_id,
   );
   return rows[0];
 }
-
 
 export async function remove(id) {
   const { rowCount } = await pool.query('DELETE FROM tarefa WHERE id = $1', [id]);

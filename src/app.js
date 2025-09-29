@@ -26,7 +26,6 @@ async function buildApp() {
     logger: true,
   });
 
-  // Configurar CORS otimizado para produção
   await app.register(fastifyCors, {
     origin: (origin, callback) => {
       const allowedOrigins = [
@@ -35,45 +34,28 @@ async function buildApp() {
         'http://localhost:3001',
         'https://project-manager-backend-5wv2.onrender.com',
         'https://projeto-ifba.vercel.app',
-        // Adicionar possíveis URLs do Vercel preview
         /^https:\/\/.*\.vercel\.app$/
       ];
 
-      // Permitir requisições sem origin (como Postman, aplicações mobile, etc.)
       if (!origin) {
-        console.log('Request without origin (Postman, mobile app, etc.)');
         return callback(null, true);
       }
 
-      // Verificar origins exatos
       const isAllowed = allowedOrigins.some(allowedOrigin => {
-        if (typeof allowedOrigin === 'string') {
-          return allowedOrigin === origin;
-        } else if (allowedOrigin instanceof RegExp) {
-          return allowedOrigin.test(origin);
-        }
+        if (typeof allowedOrigin === 'string') return allowedOrigin === origin;
+        if (allowedOrigin instanceof RegExp) return allowedOrigin.test(origin);
         return false;
       });
 
       if (isAllowed) {
-        console.log(`CORS: Allowing origin ${origin}`);
         callback(null, true);
       } else {
-        console.warn(`CORS: Blocking origin ${origin}`);
         callback(new Error('Não permitido pelo CORS'), false);
       }
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'PATCH'],
-    allowedHeaders: [
-      'Origin',
-      'X-Requested-With',
-      'Content-Type',
-      'Accept',
-      'Authorization',
-      'Cookie',
-      'Set-Cookie'
-    ],
+    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization', 'Cookie', 'Set-Cookie'],
     exposedHeaders: ['Set-Cookie']
   });
 
@@ -82,43 +64,37 @@ async function buildApp() {
     parseOptions: {}
   });
 
-  // Configuração de sessões otimizada para produção
+  const sessionStore = new PostgreSQLSessionStore();
   const isProduction = process.env.NODE_ENV === 'production';
 
-  // Inicializar store de sessões persistente
-  const sessionStore = new PostgreSQLSessionStore();
-
+  // Configuração de cookie que se adapta ao ambiente (Produção vs. Desenvolvimento)
   app.register(fastifySession, {
     secret: process.env.SESSION_SECRET || 'default-session-secret-key-change-in-production',
     cookie: {
-      secure: isProduction, // HTTPS apenas em produção
-      maxAge: 1000 * 60 * 60 * 24 * 30, // 30 dias para persistência
+      secure: isProduction,
+      maxAge: 1000 * 60 * 60 * 24 * 30, // 30 dias
       httpOnly: true,
-      sameSite: isProduction ? 'none' : 'lax', // 'none' necessário para cross-origin em produção
-      domain: isProduction ? undefined : undefined // Deixar o navegador decidir
+      sameSite: isProduction ? 'none' : 'lax',
     },
     saveUninitialized: false,
-    rolling: true, // Renovar sessão a cada requisição
-    store: sessionStore // Usar store PostgreSQL
+    rolling: true,
+    store: sessionStore
   });
 
   app.decorate('db', pool);
 
-  // Middleware global para adicionar headers CORS e log
   app.addHook('onRequest', async (request, reply) => {
-    // Log da requisição
     app.log.info(`${request.method} ${request.url} - User-Agent: ${request.headers['user-agent']}`);
   });
 
-  // Registrar multipart antes das rotas
   app.register(fastifyMultipart);
 
-  // Health check routes
   app.get('/health', async () => ({ status: 'ok' }));
   app.get('/db-test', async (request, reply) => {
     const result = await app.db.query('SELECT NOW()');
     reply.send({ success: true, timestamp: result.rows[0].now });
   });
+
   app.register(authRoutes, { prefix: '/api/auth' });
   app.register(categoryRoutes, { prefix: '/api/categories' });
   app.register(userRoutes, { prefix: '/api/users' });
@@ -129,12 +105,11 @@ async function buildApp() {
   app.register(reportRoutes, { prefix: '/api/reports' });
   app.register(searchRoutes, { prefix: '/api/search' });
   app.register(auditRoutes, { prefix: '/api/admin/audit' });
-  app.register(taskStatusRoutes, { prefix: '/api/admin/task-statuses' }); 
-  app.register(tagRoutes, { prefix: '/api/admin/tags' }); 
+  app.register(taskStatusRoutes, { prefix: '/api/admin/task-statuses' });
+  app.register(tagRoutes, { prefix: '/api/admin/tags' });
   app.register(commentRoutes, { prefix: '/api' });
   app.register(subtaskRoutes, { prefix: '/api' });
-  app.register(timelogRoutes, { prefix: '/api' }); 
-
+  app.register(timelogRoutes, { prefix: '/api' });
 
   return app;
 }

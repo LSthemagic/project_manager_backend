@@ -3,7 +3,7 @@ import * as repository from './users.repository.js';
 
 export async function listUsers(request, reply) {
   const users = await repository.findAll();
-  reply.send(users);
+  return reply.send(users);
 }
 
 export async function getUser(request, reply) {
@@ -12,7 +12,7 @@ export async function getUser(request, reply) {
   if (!user) {
     return reply.status(404).send({ message: 'Usuário não encontrado.' });
   }
-  reply.send(user);
+  return reply.send(user);
 }
 
 export async function createUser(request, reply) {
@@ -26,7 +26,7 @@ export async function createUser(request, reply) {
     hashedPassword,
     tipo_usuario,
   });
-  reply.status(201).send(newUser);
+  return reply.status(201).send(newUser);
 }
 
 export async function updateUser(request, reply) {
@@ -35,7 +35,7 @@ export async function updateUser(request, reply) {
   if (!updatedUser) {
     return reply.status(404).send({ message: 'Usuário não encontrado.' });
   }
-  reply.send(updatedUser);
+  return reply.send(updatedUser);
 }
 
 export async function deleteUser(request, reply) {
@@ -44,5 +44,5 @@ export async function deleteUser(request, reply) {
   if (!success) {
     return reply.status(404).send({ message: 'Usuário não encontrado.' });
   }
-  reply.status(204).send();
+  return reply.status(204).send();
 }

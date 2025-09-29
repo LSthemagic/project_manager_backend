@@ -46,29 +46,21 @@ export async function authRoutes(app) {
       return reply.status(401).send({ message: 'Email ou senha inválidos.' });
     }
 
-    // Configurar dados da sessão
+    // --- CORREÇÃO APLICADA AQUI ---
+    // Apenas definimos os dados do usuário na sessão.
+    // A configuração do cookie (maxAge, etc.) será gerenciada globalmente pelo app.js.
     request.session.user = {
       id: user.id,
       nome: user.nome,
       email: user.email,
       tipo_usuario: user.tipo_usuario,
     };
-
-    // Ajustar tempo de vida da sessão baseado em "rememberMe"
-    if (rememberMe) {
-      // 30 dias para "lembrar de mim"
-      request.session.cookie.maxAge = 1000 * 60 * 60 * 24 * 30;
-    } else {
-      // 24 horas para sessão normal
-      request.session.cookie.maxAge = 1000 * 60 * 60 * 24;
-    }
-
+    
     console.log(`User ${user.email} logged in. Remember me: ${rememberMe ? 'Yes' : 'No'}`);
 
     return reply.send({
       message: 'Login bem-sucedido!',
       user: request.session.user,
-      sessionMaxAge: request.session.cookie.maxAge
     });
   });
 
