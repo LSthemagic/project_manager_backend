@@ -1,7 +1,30 @@
 import { pool } from '../../config/database.js';
 
 export async function findByProjectId(projectId) {
-  const { rows } = await pool.query('SELECT * FROM tarefa WHERE projeto_id = $1 ORDER BY data_criacao DESC', [projectId]);
+  const { rows } = await pool.query(
+    `
+    SELECT 
+      t.*,
+      json_agg(DISTINCT c.*) FILTER (WHERE c.id IS NOT NULL) AS comentarios,
+      json_agg(DISTINCT e.*) FILTER (WHERE e.id IS NOT NULL) AS etiquetas,
+      json_agg(DISTINCT a.*) FILTER (WHERE a.id IS NOT NULL) AS anexos,
+      json_build_object(
+        'id', u.id,
+        'nome', u.nome,
+        'email', u.email
+      ) AS responsavel
+    FROM tarefa t
+    LEFT JOIN comentario c ON c.tarefa_id = t.id
+    LEFT JOIN tarefa_etiqueta te ON te.tarefa_id = t.id
+    LEFT JOIN etiqueta e ON e.id = te.etiqueta_id
+    LEFT JOIN anexo a ON a.tarefa_id = t.id
+    LEFT JOIN usuario u ON u.id = t.responsavel_id
+    WHERE t.projeto_id = $1
+    GROUP BY t.id, u.id
+    ORDER BY t.data_criacao DESC
+    `,
+    [projectId]
+  );
   return rows;
 }
 
