@@ -14,9 +14,8 @@ export async function reportRoutes(app) {
   // Rota pública para estatísticas do homepage
   app.get('/public-stats', controller.showPublicStats);
 
-  app.addHook('preHandler', ensureAdminOrManager);
-
-  app.get('/dashboard', controller.showDashboard);
-  app.get('/projects', controller.showProjectsReport);
-  app.get('/productivity', controller.showProductivityReport);
+  // Rotas protegidas que exigem autenticação de admin/gerente
+  app.get('/dashboard', { preHandler: ensureAdminOrManager }, controller.showDashboard);
+  app.get('/projects', { preHandler: ensureAdminOrManager }, controller.showProjectsReport);
+  app.get('/productivity', { preHandler: ensureAdminOrManager }, controller.showProductivityReport);
 }
