@@ -18,7 +18,6 @@ export async function taskRoutes(app) {
   app.put('/tasks/:taskId', { preHandler: [checkProjectAccess] }, controller.updateTask);
   app.delete('/tasks/:taskId', { preHandler: [checkProjectAccess] }, controller.deleteTask);
 
-  // --- ROTA ADICIONADA E CORRIGIDA AQUI ---
   app.get('/tasks/:taskId/attachments', { preHandler: [checkProjectAccess] }, controller.listAttachmentsForTask);
 
   app.post('/tasks/:taskId/attachments', { preHandler: [checkProjectAccess] }, async (request, reply) => {
@@ -43,7 +42,34 @@ export async function taskRoutes(app) {
     return reply.status(201).send(rows[0]);
   });
 
-  app.post('/attachments/:attachmentId/resize',  async (request, reply) => {
+  app.delete('/tasks/attachments/:attachmentId', async (request, reply) => {
+    try {
+      const { attachmentId } = request.params;
+
+      const { rows } = await app.db.query('SELECT * FROM anexo WHERE id = $1', [attachmentId]);
+      const attachment = rows[0];
+
+      if (!attachment) {
+        return reply.status(404).send({ message: 'Anexo não encontrado.' });
+      }
+
+      // Deletar o arquivo físico
+      if (fs.existsSync(attachment.caminho)) {
+        fs.unlinkSync(attachment.caminho);
+      }
+
+      // Deletar registro do banco de dados
+      await app.db.query('DELETE FROM anexo WHERE id = $1', [attachmentId]);
+
+      return reply.send({ message: 'Anexo deletado com sucesso.' });
+
+    } catch (error) {
+      app.log.error(error);
+      return reply.status(500).send({ message: 'Ocorreu um erro ao deletar o anexo.' });
+    }
+  });
+
+  app.post('/attachments/:attachmentId/resize', async (request, reply) => {
     try {
       const { attachmentId } = request.params;
       const { width } = request.query;
@@ -74,7 +100,12 @@ export async function taskRoutes(app) {
         .resize({ width: newWidth })
         .toFile(newPath);
 
-      
+      // Atualizar o banco de dados com o novo arquivo redimensionado
+      const fileStats = fs.statSync(newPath);
+      await app.db.query(
+        'UPDATE anexo SET nome_arquivo = $1, caminho = $2, tamanho = $3 WHERE id = $4',
+        [newFilename, newPath, fileStats.size, attachmentId]
+      );
 
       return reply.send({
         message: 'Imagem redimensionada com sucesso!',
