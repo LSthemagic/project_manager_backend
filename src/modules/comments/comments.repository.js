@@ -7,7 +7,7 @@ export async function findById(id) {
 
 export async function findByTaskId(taskId) {
   const { rows } = await pool.query(
-    `SELECT c.*, u.nome as usuario_nome
+    `SELECT c.*, u.nome, u.email as usuario_email, u.profile_picture as usuario_profile_picture
      FROM comentario c
      JOIN usuario u ON u.id = c.usuario_id
      WHERE c.tarefa_id = $1
